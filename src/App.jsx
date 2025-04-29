@@ -1,6 +1,8 @@
 import { useState } from "react";
 import BackCard from "./components/BackCard";
 import CardFront from "./components/FrontCard";
+import { ToastContainer, toast } from 'react-toastify';
+import instance from "./api/instance";
 
 export default function App() {
   const [nome, setNome] = useState("");
@@ -10,27 +12,67 @@ export default function App() {
   const [cvv, setCvv] = useState(0);
   const [senha, setSenha] = useState("");
 
-  function pagar(){
-    console.log(nome)
-    console.log(numero)
-    console.log(mes)
-    console.log(ano)
-    console.log(cvv)
-    console.log(senha)
+  async function pagar(){
+    if(!nome || !numero || !mes || !ano || !cvv || !senha){
+      return toast.error("preencha todos os campos")
+    }
+
+    if (numero.length !== 16){
+      return toast.error("Número do cartão inválido")
+    }
+
+    if(cvv.length !== 3){
+      return toast.error("CVV inválido")
+    }
+
+    if(mes.length !== 2){
+      return toast.error("Data de expiração inválida")
+    } 
+    
+    if(ano.length < 1){
+      return toast.error("Data de expiração inválida")
+    }
+
+    if(senha.length < 4){
+      return toast.error("Senah inválida")
+    }
+
+    try{
+      const response = await instance.post("/creditcards", {
+        name: nome,
+        number: numero,
+        expiration: `${mes}/${ano}`,
+        cvv: cvv,
+        password: senha
+      })
+
+      return toast.success("Pagamento realizado com sucesso")
+    
+
+    } catch (error) {
+      return toast.error("Erro ao processar o pagamento")
+
+    }
+
   }
 
   return (
     <div className="w-full h-screen flex">
+      <ToastContainer 
+      position="top-right"
+      autoClose={5000}
+      theme="colored"
+      />
       <div className="w-[40%] relative h-full bg-[#271540]">
         <div className="absolute top-10 left-60">
           <CardFront />
         </div>
-        <div className="absolute top-[450px] left-[420px]">
+        <div className="absolute top-[380px] left-[350px]">
           <BackCard />
         </div>
       </div>
-      <div className="w-[60%] h-full flex items-end p-[40px] flex-col">
-        <h1 className="text-[45px] w-[60%] h-[150px] font-bold">
+      <div className="w-[%] h-full flex items-end p-[40px] flex-col">
+        <h1 className="text-[40px] w-[60%] h-[150px] font-bold">
           Preencha os campos para concluir o pagamento
         </h1>
         <div className="w-[65%] h-auto min-h-[200px] flex flex-col gap-4">
@@ -41,7 +83,7 @@ export default function App() {
             <input
               onChange={(event) => setNome(event.target.value)}
               type="text"
-              className="w-full h-[40px] rounded-md bg-[#D9D9D9]"
+              className="w-full pl-2 h-[40px] rounded-md bg-[#D9D9D9]"
             />
           </div>
           <div className="w-full flex flex-col">
@@ -51,7 +93,7 @@ export default function App() {
             <input
               onChange={(event) => setNumero(event.target.value)}
               type="text"
-              className="w-full h-[40px] rounded-md bg-[#D9D9D9]"
+              className="w-full pl-2 h-[40px] rounded-md bg-[#D9D9D9]"
             />
           </div>
           <div className="flex">
